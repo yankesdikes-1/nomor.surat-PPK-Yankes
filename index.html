@@ -41,7 +41,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-wide">SI-NOMOR SURAT PPK</h1>
-                    <p class="text-xs text-primary-100">Terhubung dengan Supabase Database & Auth</p>
+                    <p class="text-xs text-primary-100">Terhubung dengan Supabase Database & Auth (Auto-Sync)</p>
                 </div>
             </div>
             <div class="flex items-center flex-wrap gap-2">
@@ -178,7 +178,7 @@
             <!-- Footer Info Table -->
             <div class="mt-4 pt-3 border-t text-xs text-slate-500 flex justify-between items-center">
                 <span id="total-count">Total: 0 surat tercatat</span>
-                <span class="text-primary-600 font-medium">PPK Kab. Badung &bull; Supabase Connected</span>
+                <span class="text-primary-600 font-medium">PPK Kab. Badung &bull; Supabase Connected (Live Sync)</span>
             </div>
         </div>
 
@@ -297,6 +297,7 @@
                 showToast("Login Berhasil", `Selamat datang, ${username}`);
                 checkAuthSession();
                 loadLetters();
+                setupRealtimeSync(); // Aktifkan real-time sync setelah login
             } catch (err) {
                 console.error(err);
                 showToast("Login Gagal", "Username atau Password salah.");
@@ -319,6 +320,7 @@
                 profileBadge.classList.remove('hidden');
                 profileBadge.classList.add('flex');
                 emailDisplay.textContent = currentUser.email ? currentUser.email.split('@')[0] : 'yankesbadung';
+                setupRealtimeSync();
             } else {
                 loginGate.classList.remove('hidden');
                 mainAppContent.classList.add('hidden');
@@ -352,6 +354,19 @@
                 console.error(err);
                 showToast("Gagal Memuat", err.message);
             }
+        }
+
+        // Setup Realtime Synchronization (Auto-Sync antar Komputer & HP)
+        let realtimeChannel = null;
+        function setupRealtimeSync() {
+            if (realtimeChannel) return; // Hindari duplikasi channel
+
+            realtimeChannel = supabaseClient
+                .channel('public:letters')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'letters' }, payload => {
+                    loadLetters(); // Otomatis refresh data saat ada perubahan dari device lain
+                })
+                .subscribe();
         }
 
         // Render Table
@@ -406,7 +421,7 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Form Submit Handler (Format baru: [Tanggal].[No.Urut]/PPK/[Bagian]/[Tahun])
+        // Form Submit Handler (Format: [Tanggal].[No.Urut]/PPK/[Bagian]/[Tahun])
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             if (!currentUser) return;
@@ -417,14 +432,12 @@
             const reqVal = requesterInput.value.trim();
 
             const dateObj = new Date(dateVal);
-            const day = dateObj.getDate(); // Mengambil tanggal (1-31)
+            const day = dateObj.getDate(); 
             const year = dateObj.getFullYear();
 
-            // Filter surat pada tanggal yang sama untuk menentukan nomor urut hari itu
             const sameDateLetters = letters.filter(item => item.letter_date === dateVal);
             const sequenceNum = sameDateLetters.length + 1;
 
-            // Format nomor surat: [Tanggal].[No.Urut]/PPK/[Bagian]/[Tahun] (Contoh: 10.1/PPK/YANKES/2026)
             let formattedNumber = `${day}.${sequenceNum}/PPK/${deptVal}/${year}`;
 
             const btnSubmit = document.getElementById('btn-submit');
