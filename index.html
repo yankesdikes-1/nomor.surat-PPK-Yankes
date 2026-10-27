@@ -198,10 +198,18 @@
                 <p class="text-xs text-slate-500 mt-1">Silakan masuk dengan akun terdaftar untuk mengakses aplikasi.</p>
             </div>
 
+            <!-- Tombol Quick Fill Demo Yankes Badung -->
+            <div class="mb-4 bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 text-center">
+                <p class="text-[11px] text-emerald-800 mb-1 font-medium">Akun Demo Yankes Badung:</p>
+                <button type="button" onclick="fillDemoAccount()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-3 rounded shadow transition">
+                    <i class="fa-solid fa-user-check mr-1"></i> Isi Cepat (yankesbadung)
+                </button>
+            </div>
+
             <form id="gate-auth-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Email Staff</label>
-                    <input type="email" id="gate-email" required placeholder="nama@ppk.badungkab.go.id"
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Email / Username Staff</label>
+                    <input type="text" id="gate-email" required placeholder="yankesbadung@ppk.badungkab.go.id"
                         class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-slate-50">
                 </div>
                 <div>
@@ -327,6 +335,13 @@
             }, 3000);
         }
 
+        // Quick Fill Demo Account
+        window.fillDemoAccount = function() {
+            document.getElementById('gate-email').value = "yankesbadung@ppk.badungkab.go.id";
+            document.getElementById('gate-password').value = "Pelayanankesehatan1";
+            showToast("Demo Terisi", "Kredensial yankesbadung telah dimasukkan.");
+        };
+
         // Gate Auth Mode Toggle (Login vs Register)
         function toggleGateAuthMode() {
             isGateSignUpMode = !isGateSignUpMode;
@@ -357,7 +372,12 @@
                 return;
             }
 
-            const email = document.getElementById('gate-email').value.trim();
+            let email = document.getElementById('gate-email').value.trim();
+            // Jika user mengetik 'yankesbadung' tanpa domain, otomatis lengkapi ke format email
+            if (!email.includes('@')) {
+                email = email + "@ppk.badungkab.go.id";
+            }
+
             const password = document.getElementById('gate-password').value.trim();
             const btnGate = document.getElementById('btn-gate-submit');
 
@@ -368,7 +388,7 @@
                 if (isGateSignUpMode) {
                     const { data, error } = await supabaseClient.auth.signUp({ email, password });
                     if (error) throw error;
-                    showToast("Pendaftaran Berhasil", "Silakan cek email Anda untuk konfirmasi atau langsung login jika konfirmasi dinonaktifkan.");
+                    showToast("Pendaftaran Berhasil", "Akun berhasil didaftarkan. Silakan login.");
                     isGateSignUpMode = false;
                     toggleGateAuthMode();
                 } else {
