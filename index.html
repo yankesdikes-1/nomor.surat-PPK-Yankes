@@ -29,6 +29,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS (XLSX) CDN for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-primary-50 min-h-screen text-slate-800 flex flex-col justify-between font-sans">
 
@@ -133,14 +135,21 @@
                 <h2 class="text-lg font-bold text-primary-900 flex items-center">
                     <i class="fa-solid fa-list-check text-primary-600 mr-2"></i> Daftar Riwayat Nomor Surat
                 </h2>
-                <div class="flex items-center space-x-2 w-full sm:w-auto">
+                <div class="flex items-center space-x-2 w-full sm:w-auto flex-wrap gap-2">
                     <div class="relative flex-grow sm:flex-grow-0">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                             <i class="fa-solid fa-search text-xs"></i>
                         </span>
                         <input type="text" id="search-input" placeholder="Cari nomor / perihal..."
-                            class="text-xs pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg w-full sm:w-48 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                            class="text-xs pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg w-full sm:w-44 focus:outline-none focus:ring-1 focus:ring-primary-500">
                     </div>
+                    <!-- Tombol Download Excel -->
+                    <button onclick="downloadExcel()" title="Download Rekapan Excel"
+                        class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>Excel</span>
+                    </button>
+                    <!-- Tombol Refresh -->
                     <button onclick="loadLetters()" title="Muat Ulang Data"
                         class="bg-primary-50 hover:bg-primary-100 text-primary-600 px-3 py-1.5 rounded-lg text-xs font-medium border border-primary-200 transition">
                         <i class="fa-solid fa-rotate"></i>
@@ -297,7 +306,7 @@
                 showToast("Login Berhasil", `Selamat datang, ${username}`);
                 checkAuthSession();
                 loadLetters();
-                setupRealtimeSync(); // Aktifkan real-time sync setelah login
+                setupRealtimeSync();
             } catch (err) {
                 console.error(err);
                 showToast("Login Gagal", "Username atau Password salah.");
@@ -336,7 +345,7 @@
             showToast("Keluar", "Anda telah keluar dari akun.");
         }
 
-        // Load Letters from Supabase
+        // Load Letters from Supabase (Diurutkan berurutan sesuai tanggal)
         async function loadLetters() {
             if (!currentUser) return;
 
@@ -344,7 +353,8 @@
                 const { data, error } = await supabaseClient
                     .from('letters')
                     .select('*')
-                    .order('created_at', { ascending: false });
+                    .order('letter_date', { ascending: true })
+                    .order('created_at', { ascending: true });
 
                 if (error) throw error;
 
@@ -359,12 +369,12 @@
         // Setup Realtime Synchronization (Auto-Sync antar Komputer & HP)
         let realtimeChannel = null;
         function setupRealtimeSync() {
-            if (realtimeChannel) return; // Hindari duplikasi channel
+            if (realtimeChannel) return;
 
             realtimeChannel = supabaseClient
                 .channel('public:letters')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'letters' }, payload => {
-                    loadLetters(); // Otomatis refresh data saat ada perubahan dari device lain
+                    loadLetters();
                 })
                 .subscribe();
         }
@@ -415,6 +425,32 @@
             }
 
             totalCountEl.textContent = `Total: ${letters.length} surat tercatat`;
+        }
+
+        // Fungsi Download Rekap Excel
+        function downloadExcel() {
+            if (letters.length === 0) {
+                showToast("Kosong", "Tidak ada data surat untuk di-export ke Excel.");
+                return;
+            }
+
+            const excelData = letters.map((item, index) => ({
+                "No": index + 1,
+                "Nomor Surat": item.full_number,
+                "Tanggal Surat": item.letter_date,
+                "Bagian / Unit": item.department,
+                "Perihal / Keterangan": item.description,
+                "Pemohon / Staff": item.requester
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Nomor Surat");
+
+            // Format nama file dengan tanggal hari ini
+            const dateStr = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `Rekap_Nomor_Surat_PPK_${dateStr}.xlsx`);
+            showToast("Berhasil", "File Excel rekap surat berhasil diunduh.");
         }
 
         function escapeHtml(str) {
