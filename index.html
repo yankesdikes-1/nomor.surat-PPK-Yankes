@@ -123,7 +123,7 @@
             </div>
 
             <div class="mt-6 pt-4 border-t text-center text-xs text-slate-500">
-                Format Otomatis: <br><code class="bg-primary-50 text-primary-700 px-2 py-0.5 rounded font-mono font-bold">[No.Urut].[Sub]/[Bulan]/PPK/[Bagian]/[Tahun]</code>
+                Format Otomatis: <br><code class="bg-primary-50 text-primary-700 px-2 py-0.5 rounded font-mono font-bold">[Tanggal].[No.Urut]/PPK/[Bagian]/[Tahun]</code>
             </div>
         </div>
 
@@ -286,7 +286,6 @@
             const password = document.getElementById('gate-password').value.trim();
             const btnGate = document.getElementById('btn-gate-submit');
 
-            // Format otomatis ke email Supabase di balik layar
             const email = `${username}@ppk.badungkab.go.id`;
 
             btnGate.disabled = true;
@@ -333,14 +332,6 @@
             currentUser = null;
             checkAuthSession();
             showToast("Keluar", "Anda telah keluar dari akun.");
-        }
-
-        // Helper: Convert Month to Roman Numeral
-        function getRomanMonth(dateString) {
-            const date = new Date(dateString);
-            const month = date.getMonth() + 1;
-            const romans = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
-            return romans[month];
         }
 
         // Load Letters from Supabase
@@ -415,7 +406,7 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Form Submit Handler
+        // Form Submit Handler (Format baru: [Tanggal].[No.Urut]/PPK/[Bagian]/[Tahun])
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             if (!currentUser) return;
@@ -425,26 +416,16 @@
             const descVal = descriptionInput.value.trim();
             const reqVal = requesterInput.value.trim();
 
-            const year = new Date(dateVal).getFullYear();
-            const romanMonth = getRomanMonth(dateVal);
+            const dateObj = new Date(dateVal);
+            const day = dateObj.getDate(); // Mengambil tanggal (1-31)
+            const year = dateObj.getFullYear();
 
+            // Filter surat pada tanggal yang sama untuk menentukan nomor urut hari itu
             const sameDateLetters = letters.filter(item => item.letter_date === dateVal);
-            
-            let baseNumber = 1;
-            let subNumber = 0;
+            const sequenceNum = sameDateLetters.length + 1;
 
-            if (sameDateLetters.length > 0) {
-                baseNumber = sameDateLetters[0].base_number || 1;
-                subNumber = sameDateLetters.length + 1;
-            } else {
-                const yearLetters = letters.filter(item => new Date(item.letter_date).getFullYear() === year);
-                baseNumber = yearLetters.length + 1;
-                subNumber = 0;
-            }
-
-            let formattedNumber = subNumber > 0 
-                ? `${baseNumber}.${subNumber}/${romanMonth}/PPK/${deptVal}/${year}`
-                : `${baseNumber}/${romanMonth}/PPK/${deptVal}/${year}`;
+            // Format nomor surat: [Tanggal].[No.Urut]/PPK/[Bagian]/[Tahun] (Contoh: 10.1/PPK/YANKES/2026)
+            let formattedNumber = `${day}.${sequenceNum}/PPK/${deptVal}/${year}`;
 
             const btnSubmit = document.getElementById('btn-submit');
             btnSubmit.disabled = true;
@@ -454,8 +435,8 @@
                 const { error } = await supabaseClient
                     .from('letters')
                     .insert([{
-                        base_number: baseNumber,
-                        sub_number: subNumber,
+                        base_number: day,
+                        sub_number: sequenceNum,
                         full_number: formattedNumber,
                         letter_date: dateVal,
                         department: deptVal,
