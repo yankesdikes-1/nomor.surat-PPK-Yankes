@@ -193,6 +193,29 @@
 
     </main>
 
+    <!-- Pop-up Modal Sukses Berhasil Generate -->
+    <div id="success-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 text-center transform transition-all">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl shadow-inner">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 mb-1">Nomor Surat Berhasil Digenerate!</h3>
+            <p class="text-xs text-slate-500 mb-4">Nomor surat telah berhasil disimpan dan disinkronkan.</p>
+            
+            <div class="bg-primary-50 border border-primary-200 rounded-xl p-3 mb-4 flex items-center justify-between shadow-sm">
+                <span id="modal-letter-number" class="font-mono font-bold text-primary-800 text-xs select-all truncate mr-2"></span>
+                <button onclick="copyModalNumber()" class="bg-primary-600 hover:bg-primary-700 text-white text-xs px-3 py-1.5 rounded-lg transition flex items-center space-x-1 shrink-0 shadow">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Salin</span>
+                </button>
+            </div>
+
+            <button onclick="closeSuccessModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2.5 rounded-xl transition">
+                Tutup
+            </button>
+        </div>
+    </div>
+
     <!-- Full-Screen Login Gate -->
     <div id="login-gate" class="max-w-md mx-auto my-12 w-full px-4 flex-grow flex items-center justify-center">
         <div class="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 w-full">
@@ -257,6 +280,7 @@
 
         let currentUser = null;
         let letters = [];
+        let lastGeneratedNumber = ''; // Variabel untuk menyimpan nomor surat terakhir
 
         // DOM Elements
         const form = document.getElementById('letter-form');
@@ -272,6 +296,8 @@
         const toast = document.getElementById('toast');
         const mainAppContent = document.getElementById('main-app-content');
         const loginGate = document.getElementById('login-gate');
+        const successModal = document.getElementById('success-modal');
+        const modalLetterNumber = document.getElementById('modal-letter-number');
 
         // Set default date to today
         const todayStr = new Date().toISOString().split('T')[0];
@@ -345,7 +371,7 @@
             showToast("Keluar", "Anda telah keluar dari akun.");
         }
 
-        // Load Letters from Supabase (Diurutkan berurutan sesuai tanggal)
+        // Load Letters from Supabase (Urut sesuai tanggal)
         async function loadLetters() {
             if (!currentUser) return;
 
@@ -447,7 +473,6 @@
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Nomor Surat");
 
-            // Format nama file dengan tanggal hari ini
             const dateStr = new Date().toISOString().split('T')[0];
             XLSX.writeFile(workbook, `Rekap_Nomor_Surat_PPK_${dateStr}.xlsx`);
             showToast("Berhasil", "File Excel rekap surat berhasil diunduh.");
@@ -495,7 +520,11 @@
 
                 if (error) throw error;
 
-                showToast("Berhasil", `Nomor ${formattedNumber} tersimpan di Supabase.`);
+                // Simpan ke variabel global & tampilkan Pop-up Modal Sukses
+                lastGeneratedNumber = formattedNumber;
+                modalLetterNumber.textContent = formattedNumber;
+                successModal.classList.remove('hidden');
+
                 form.reset();
                 letterDateInput.value = todayStr;
                 await loadLetters();
@@ -507,6 +536,18 @@
                 btnSubmit.innerHTML = `<i class="fa-solid fa-ticket"></i> <span>Generate & Ambil Nomor</span>`;
             }
         });
+
+        // Fungsi Salin dari dalam Pop-up Modal
+        window.copyModalNumber = function() {
+            navigator.clipboard.writeText(lastGeneratedNumber).then(() => {
+                showToast("Berhasil Disalin", `Nomor ${lastGeneratedNumber} disalin ke clipboard.`);
+            });
+        };
+
+        // Tutup Pop-up Modal
+        window.closeSuccessModal = function() {
+            successModal.classList.add('hidden');
+        };
 
         window.copyNumber = function(num) {
             navigator.clipboard.writeText(num).then(() => {
