@@ -53,9 +53,6 @@
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
-                <button onclick="openConfigModal()" class="text-xs bg-primary-800 hover:bg-primary-900 px-3 py-1.5 rounded-full border border-primary-600 transition flex items-center space-x-1">
-                    <i class="fa-solid fa-gear"></i> <span id="db-status-text">Pengaturan DB</span>
-                </button>
                 <div class="text-xs bg-primary-800 px-3 py-1.5 rounded-full border border-primary-600 hidden sm:block">
                     <i class="fa-regular fa-calendar-days mr-1.5"></i> <span id="current-date-display"></span>
                 </div>
@@ -234,45 +231,6 @@
         </div>
     </div>
 
-    <!-- Modal Konfigurasi Supabase -->
-    <div id="config-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-100">
-            <div class="flex justify-between items-center pb-3 border-b mb-4">
-                <h3 class="font-bold text-slate-800 text-base flex items-center">
-                    <i class="fa-solid fa-database text-primary-600 mr-2"></i> Konfigurasi Supabase
-                </h3>
-                <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            <p class="text-xs text-slate-500 mb-4">
-                Masukkan URL dan Anon Key dari project Supabase Anda agar aplikasi terhubung secara online.
-            </p>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Supabase URL</label>
-                    <input type="text" id="supabase-url-input" placeholder="https://xxxx.supabase.co"
-                        class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Supabase Anon Key</label>
-                    <input type="password" id="supabase-key-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX..."
-                        class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                </div>
-            </div>
-            <div class="mt-6 flex space-x-2">
-                <button onclick="saveSupabaseConfig()" 
-                    class="flex-1 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold py-2.5 rounded-lg shadow transition">
-                    Simpan & Hubungkan
-                </button>
-                <button onclick="closeConfigModal()" 
-                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-lg transition">
-                    Batal
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 text-center py-4 text-xs text-slate-500 mt-8">
         <p>&copy; 2026 Aplikasi Pengambilan Nomor Surat PPK. Vercel & Supabase Ready.</p>
@@ -291,19 +249,16 @@
 
     <!-- Script Aplikasi Supabase & Auth -->
     <script>
-        let SUPABASE_URL = localStorage.getItem('sb_url') || "";
-        let SUPABASE_ANON_KEY = localStorage.getItem('sb_key') || "";
+        // ==========================================
+        // KONFIGURASI SUPABASE (Ganti dengan milik Anda)
+        // ==========================================
+        const SUPABASE_URL = "https://xxxx.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX..."; 
 
-        let supabaseClient = null;
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let isGateSignUpMode = false;
         let currentUser = null;
-
-        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            document.getElementById('db-status-text').textContent = "Terhubung DB";
-            checkAuthSession();
-        }
-
         let letters = [];
 
         // DOM Elements
@@ -366,14 +321,8 @@
         const gateAuthForm = document.getElementById('gate-auth-form');
         gateAuthForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            if (!supabaseClient) {
-                alert('Silakan atur koneksi Supabase terlebih dahulu melalui tombol "Pengaturan DB" di kanan atas!');
-                openConfigModal();
-                return;
-            }
 
             let email = document.getElementById('gate-email').value.trim();
-            // Jika user mengetik 'yankesbadung' tanpa domain, otomatis lengkapi ke format email
             if (!email.includes('@')) {
                 email = email + "@ppk.badungkab.go.id";
             }
@@ -410,12 +359,6 @@
         });
 
         async function checkAuthSession() {
-            if (!supabaseClient) {
-                loginGate.classList.remove('hidden');
-                mainAppContent.classList.add('hidden');
-                return;
-            }
-
             const { data: { session } } = await supabaseClient.auth.getSession();
             currentUser = session?.user || null;
 
@@ -437,43 +380,10 @@
         }
 
         async function logout() {
-            if (!supabaseClient) return;
             await supabaseClient.auth.signOut();
             currentUser = null;
             checkAuthSession();
             showToast("Keluar", "Anda telah keluar dari akun.");
-        }
-
-        // Supabase Config Modal
-        function openConfigModal() {
-            document.getElementById('supabase-url-input').value = SUPABASE_URL;
-            document.getElementById('supabase-key-input').value = SUPABASE_ANON_KEY;
-            document.getElementById('config-modal').classList.remove('hidden');
-            document.getElementById('config-modal').classList.add('flex');
-        }
-
-        function closeConfigModal() {
-            document.getElementById('config-modal').classList.remove('flex');
-            document.getElementById('config-modal').classList.add('hidden');
-        }
-
-        function saveSupabaseConfig() {
-            const url = document.getElementById('supabase-url-input').value.trim();
-            const key = document.getElementById('supabase-key-input').value.trim();
-            if(!url || !key) {
-                alert('URL dan Anon Key harus diisi!');
-                return;
-            }
-            localStorage.setItem('sb_url', url);
-            localStorage.setItem('sb_key', key);
-            SUPABASE_URL = url;
-            SUPABASE_ANON_KEY = key;
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            document.getElementById('db-status-text').textContent = "Terhubung DB";
-            closeConfigModal();
-            showToast("Berhasil", "Koneksi Supabase diperbarui.");
-            checkAuthSession();
-            if (currentUser) loadLetters();
         }
 
         // Helper: Convert Month to Roman Numeral
@@ -486,7 +396,7 @@
 
         // Load Letters from Supabase
         async function loadLetters() {
-            if (!supabaseClient || !currentUser) return;
+            if (!currentUser) return;
 
             try {
                 const { data, error } = await supabaseClient
@@ -559,7 +469,7 @@
         // Form Submit Handler
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            if (!supabaseClient || !currentUser) return;
+            if (!currentUser) return;
 
             const dateVal = letterDateInput.value;
             const deptVal = departmentInput.value;
@@ -644,11 +554,9 @@
         });
 
         // Init Session Check on Load
-        if (supabaseClient) {
-            checkAuthSession().then(() => {
-                if (currentUser) loadLetters();
-            });
-        }
+        checkAuthSession().then(() => {
+            if (currentUser) loadLetters();
+        });
     </script>
 </body>
 </html>
