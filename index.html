@@ -53,9 +53,6 @@
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
-                <button id="btn-open-login" onclick="openAuthModal()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-full shadow transition flex items-center space-x-1">
-                    <i class="fa-solid fa-right-to-bracket"></i> <span>Login / Daftar</span>
-                </button>
                 <button onclick="openConfigModal()" class="text-xs bg-primary-800 hover:bg-primary-900 px-3 py-1.5 rounded-full border border-primary-600 transition flex items-center space-x-1">
                     <i class="fa-solid fa-gear"></i> <span id="db-status-text">Pengaturan DB</span>
                 </button>
@@ -66,8 +63,8 @@
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-4 py-8 w-full flex-grow grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Main Content (Disembunyikan jika belum Login) -->
+    <main id="main-app-content" class="max-w-6xl mx-auto px-4 py-8 w-full flex-grow grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
         
         <!-- Left Column: Form Pengambilan Nomor -->
         <div class="lg:col-span-1 bg-white rounded-xl shadow-md p-6 border border-primary-100 flex flex-col justify-between">
@@ -190,41 +187,39 @@
 
     </main>
 
-    <!-- Modal Login / Auth -->
-    <div id="auth-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-100">
-            <div class="flex justify-between items-center pb-3 border-b mb-4">
-                <h3 id="auth-modal-title" class="font-bold text-slate-800 text-base flex items-center">
-                    <i class="fa-solid fa-right-to-bracket text-primary-600 mr-2"></i> Login Akun Staff PPK
-                </h3>
-                <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+    <!-- Full-Screen Login Gate (Ditampilkan jika belum Login) -->
+    <div id="login-gate" class="max-w-md mx-auto my-12 w-full px-4 flex-grow flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 w-full">
+            <div class="text-center mb-6">
+                <div class="inline-flex bg-primary-100 text-primary-700 p-3 rounded-full mb-3 shadow-sm">
+                    <i class="fa-solid fa-lock text-2xl"></i>
+                </div>
+                <h2 id="gate-title" class="text-xl font-bold text-slate-900">Login Staff PPK</h2>
+                <p class="text-xs text-slate-500 mt-1">Silakan masuk dengan akun terdaftar untuk mengakses aplikasi.</p>
             </div>
 
-            <form id="auth-form" class="space-y-3">
+            <form id="gate-auth-form" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Email Staff</label>
-                    <input type="email" id="auth-email" required placeholder="nama@ppk.badungkab.go.id"
-                        class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <input type="email" id="gate-email" required placeholder="nama@ppk.badungkab.go.id"
+                        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-slate-50">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
-                    <input type="password" id="auth-password" required placeholder="••••••••"
-                        class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <input type="password" id="gate-password" required placeholder="••••••••"
+                        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-slate-50">
                 </div>
 
-                <div class="pt-2">
-                    <button type="submit" id="btn-auth-submit"
-                        class="w-full bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold py-2.5 rounded-lg shadow transition">
-                        Masuk (Login)
-                    </button>
-                </div>
+                <button type="submit" id="btn-gate-submit"
+                    class="w-full bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold py-2.5 rounded-lg shadow transition duration-200 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Masuk (Login)</span>
+                </button>
             </form>
 
-            <div class="mt-4 pt-3 border-t text-center text-xs text-slate-500 flex justify-between items-center">
-                <span id="auth-mode-text">Belum punya akun?</span>
-                <button onclick="toggleAuthMode()" class="text-primary-600 font-semibold hover:underline">
+            <div class="mt-6 pt-4 border-t text-center text-xs text-slate-500 flex justify-between items-center">
+                <span id="gate-mode-text">Belum punya akun?</span>
+                <button type="button" onclick="toggleGateAuthMode()" class="text-primary-600 font-semibold hover:underline">
                     Daftar Akun Baru
                 </button>
             </div>
@@ -292,7 +287,7 @@
         let SUPABASE_ANON_KEY = localStorage.getItem('sb_key') || "";
 
         let supabaseClient = null;
-        let isSignUpMode = false;
+        let isGateSignUpMode = false;
         let currentUser = null;
 
         if (SUPABASE_URL && SUPABASE_ANON_KEY) {
@@ -315,6 +310,8 @@
         const totalCountEl = document.getElementById('total-count');
         const currentDateDisplay = document.getElementById('current-date-display');
         const toast = document.getElementById('toast');
+        const mainAppContent = document.getElementById('main-app-content');
+        const loginGate = document.getElementById('login-gate');
 
         // Set default date to today
         const todayStr = new Date().toISOString().split('T')[0];
@@ -330,64 +327,54 @@
             }, 3000);
         }
 
-        // Auth Modal & Functions
-        function openAuthModal() {
+        // Gate Auth Mode Toggle (Login vs Register)
+        function toggleGateAuthMode() {
+            isGateSignUpMode = !isGateSignUpMode;
+            const titleEl = document.getElementById('gate-title');
+            const btnEl = document.getElementById('btn-gate-submit');
+            const modeText = document.getElementById('gate-mode-text');
+            const toggleBtn = modeText.nextElementSibling;
+
+            if (isGateSignUpMode) {
+                titleEl.textContent = "Daftar Akun Staff Baru";
+                btnEl.innerHTML = `<i class="fa-solid fa-user-plus mr-2"></i><span>Daftar (Register)</span>`;
+                modeText.textContent = "Sudah punya akun?";
+                toggleBtn.textContent = "Masuk (Login)";
+            } else {
+                titleEl.textContent = "Login Staff PPK";
+                btnEl.innerHTML = `<i class="fa-solid fa-right-to-bracket mr-2"></i><span>Masuk (Login)</span>`;
+                modeText.textContent = "Belum punya akun?";
+                toggleBtn.textContent = "Daftar Akun Baru";
+            }
+        }
+
+        const gateAuthForm = document.getElementById('gate-auth-form');
+        gateAuthForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
             if (!supabaseClient) {
-                alert('Atur koneksi Supabase terlebih dahulu melalui Pengaturan DB!');
+                alert('Silakan atur koneksi Supabase terlebih dahulu melalui tombol "Pengaturan DB" di kanan atas!');
                 openConfigModal();
                 return;
             }
-            document.getElementById('auth-modal').classList.remove('hidden');
-            document.getElementById('auth-modal').classList.add('flex');
-        }
 
-        function closeAuthModal() {
-            document.getElementById('auth-modal').classList.remove('flex');
-            document.getElementById('auth-modal').classList.add('hidden');
-        }
+            const email = document.getElementById('gate-email').value.trim();
+            const password = document.getElementById('gate-password').value.trim();
+            const btnGate = document.getElementById('btn-gate-submit');
 
-        function toggleAuthMode() {
-            isSignUpMode = !isSignUpMode;
-            const titleEl = document.getElementById('auth-modal-title');
-            const btnEl = document.getElementById('btn-auth-submit');
-            const modeText = document.getElementById('auth-mode-text');
-            const toggleBtn = modeText.nextElementSibling;
-
-            if (isSignUpMode) {
-                titleEl.innerHTML = `<i class="fa-solid fa-user-plus text-primary-600 mr-2"></i> Daftar Akun Staff Baru`;
-                btnEl.textContent = `Daftar (Register)`;
-                modeText.textContent = `Sudah punya akun?`;
-                toggleBtn.textContent = `Masuk (Login)`;
-            } else {
-                titleEl.innerHTML = `<i class="fa-solid fa-right-to-bracket text-primary-600 mr-2"></i> Login Akun Staff PPK`;
-                btnEl.textContent = `Masuk (Login)`;
-                modeText.textContent = `Belum punya akun?`;
-                toggleBtn.textContent = `Daftar Akun Baru`;
-            }
-        }
-
-        const authForm = document.getElementById('auth-form');
-        authForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            const btnAuth = document.getElementById('btn-auth-submit');
-
-            btnAuth.disabled = true;
-            btnAuth.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Memproses...`;
+            btnGate.disabled = true;
+            btnGate.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Memproses...`;
 
             try {
-                if (isSignUpMode) {
+                if (isGateSignUpMode) {
                     const { data, error } = await supabaseClient.auth.signUp({ email, password });
                     if (error) throw error;
                     showToast("Pendaftaran Berhasil", "Silakan cek email Anda untuk konfirmasi atau langsung login jika konfirmasi dinonaktifkan.");
-                    isSignUpMode = false;
-                    toggleAuthMode();
+                    isGateSignUpMode = false;
+                    toggleGateAuthMode();
                 } else {
                     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
                     if (error) throw error;
                     showToast("Login Berhasil", `Selamat datang, ${data.user.email}`);
-                    closeAuthModal();
                     checkAuthSession();
                     loadLetters();
                 }
@@ -395,29 +382,37 @@
                 console.error(err);
                 showToast("Autentikasi Gagal", err.message);
             } finally {
-                btnAuth.disabled = false;
-                btnAuth.textContent = isSignUpMode ? "Daftar (Register)" : "Masuk (Login)";
+                btnGate.disabled = false;
+                btnGate.innerHTML = isGateSignUpMode 
+                    ? `<i class="fa-solid fa-user-plus mr-2"></i><span>Daftar (Register)</span>`
+                    : `<i class="fa-solid fa-right-to-bracket mr-2"></i><span>Masuk (Login)</span>`;
             }
         });
 
         async function checkAuthSession() {
-            if (!supabaseClient) return;
+            if (!supabaseClient) {
+                loginGate.classList.remove('hidden');
+                mainAppContent.classList.add('hidden');
+                return;
+            }
+
             const { data: { session } } = await supabaseClient.auth.getSession();
             currentUser = session?.user || null;
 
             const profileBadge = document.getElementById('user-profile-badge');
-            const btnLogin = document.getElementById('btn-open-login');
             const emailDisplay = document.getElementById('user-email-display');
 
             if (currentUser) {
+                loginGate.classList.add('hidden');
+                mainAppContent.classList.remove('hidden');
                 profileBadge.classList.remove('hidden');
                 profileBadge.classList.add('flex');
-                btnLogin.classList.add('hidden');
                 emailDisplay.textContent = currentUser.email;
             } else {
+                loginGate.classList.remove('hidden');
+                mainAppContent.classList.add('hidden');
                 profileBadge.classList.remove('flex');
                 profileBadge.classList.add('hidden');
-                btnLogin.classList.remove('hidden');
             }
         }
 
@@ -427,7 +422,6 @@
             currentUser = null;
             checkAuthSession();
             showToast("Keluar", "Anda telah keluar dari akun.");
-            loadLetters();
         }
 
         // Supabase Config Modal
@@ -459,7 +453,7 @@
             closeConfigModal();
             showToast("Berhasil", "Koneksi Supabase diperbarui.");
             checkAuthSession();
-            loadLetters();
+            if (currentUser) loadLetters();
         }
 
         // Helper: Convert Month to Roman Numeral
@@ -472,13 +466,7 @@
 
         // Load Letters from Supabase
         async function loadLetters() {
-            if (!supabaseClient) {
-                tableBody.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                emptyState.querySelector('p.text-slate-500').textContent = "Supabase belum dikonfigurasi.";
-                emptyState.querySelector('p.text-slate-400').textContent = "Silakan klik tombol 'Pengaturan DB' di kanan atas.";
-                return;
-            }
+            if (!supabaseClient || !currentUser) return;
 
             try {
                 const { data, error } = await supabaseClient
@@ -551,17 +539,7 @@
         // Form Submit Handler
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            if (!supabaseClient) {
-                alert('Silakan atur koneksi Supabase terlebih dahulu melalui tombol "Pengaturan DB" di kanan atas!');
-                openConfigModal();
-                return;
-            }
-
-            if (!currentUser) {
-                alert('Anda harus Login terlebih dahulu untuk mengambil nomor surat!');
-                openAuthModal();
-                return;
-            }
+            if (!supabaseClient || !currentUser) return;
 
             const dateVal = letterDateInput.value;
             const deptVal = departmentInput.value;
@@ -628,11 +606,7 @@
         };
 
         window.deleteLetter = function(id) {
-            if (!currentUser) {
-                alert('Anda harus Login terlebih dahulu untuk menghapus data!');
-                openAuthModal();
-                return;
-            }
+            if (!currentUser) return;
             if (confirm("Apakah Anda yakin ingin menghapus nomor surat ini dari database?")) {
                 supabaseClient.from('letters').delete().eq('id', id).then(({ error }) => {
                     if (error) {
@@ -649,8 +623,12 @@
             renderTable(e.target.value);
         });
 
-        // Init
-        loadLetters();
+        // Init Session Check on Load
+        if (supabaseClient) {
+            checkAuthSession().then(() => {
+                if (currentUser) loadLetters();
+            });
+        }
     </script>
 </body>
 </html>
