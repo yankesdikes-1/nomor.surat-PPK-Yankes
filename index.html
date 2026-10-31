@@ -39,7 +39,6 @@
     <header class="bg-gradient-to-r from-emerald-800 to-teal-700 text-white shadow-lg">
         <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-col md:flex-row justify-between items-center">
             <div class="flex items-center space-x-3.5 mb-2 md:mb-0">
-                <!-- Logo tanpa kotak/border -->
                 <img id="app-logo" src="logo-badung.png" alt="Logo Badung" class="w-11 h-11 object-contain drop-shadow-md" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
                 <div>
                     <h1 class="text-base md:text-lg font-bold tracking-wide">SI-NOMOR SURAT PPK</h1>
@@ -47,7 +46,6 @@
                 </div>
             </div>
             <div class="flex items-center flex-wrap gap-2">
-                <!-- User Profile / Auth Status -->
                 <div id="user-profile-badge" class="hidden items-center space-x-2 text-xs bg-emerald-900/60 px-3.5 py-1.5 rounded-full border border-emerald-600/50 backdrop-blur-sm">
                     <i class="fa-solid fa-user-check text-emerald-300"></i>
                     <span id="user-email-display" class="font-medium">yankesbadung</span>
@@ -62,7 +60,7 @@
         </div>
     </header>
 
-    <!-- Main Content (Disembunyikan jika belum Login) -->
+    <!-- Main Content -->
     <main id="main-app-content" class="max-w-6xl mx-auto px-4 py-6 w-full flex-grow flex flex-col gap-6 hidden">
         
         <!-- Dashboard Menu / Quick Stats Bar -->
@@ -114,17 +112,14 @@
                     </h2>
 
                     <form id="letter-form" class="space-y-4">
-                        <!-- Tanggal Surat -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1" for="letter-date">
                                 <i class="fa-solid fa-calendar mr-1 text-emerald-600"></i> Tanggal Surat
                             </label>
                             <input type="date" id="letter-date" required
                                 class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-slate-50/50">
-                            <p class="text-[11px] text-slate-400 mt-1">Bisa dipilih untuk tanggal hari ini atau hari yang sudah lewat.</p>
                         </div>
 
-                        <!-- Bagian / Unit -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1" for="department">
                                 <i class="fa-solid fa-sitemap mr-1 text-emerald-600"></i> Bagian / Unit (Sub Format)
@@ -139,7 +134,6 @@
                             </select>
                         </div>
 
-                        <!-- Perihal / Keterangan -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1" for="description">
                                 <i class="fa-solid fa-pen-to-square mr-1 text-emerald-600"></i> Perihal / Keterangan Surat
@@ -148,7 +142,6 @@
                                 class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-slate-50/50"></textarea>
                         </div>
 
-                        <!-- Pemohon / Penanggung Jawab -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1" for="requester">
                                 <i class="fa-solid fa-user mr-1 text-emerald-600"></i> Nama Pemohon / Staff
@@ -211,20 +204,17 @@
                         <i class="fa-solid fa-folder-open"></i>
                     </div>
                     <p class="text-slate-500 text-sm font-medium">Belum ada nomor surat di Database Supabase.</p>
-                    <p class="text-slate-400 text-xs mt-1">Silakan ambil nomor baru atau pastikan koneksi Supabase Anda benar.</p>
                 </div>
 
-                <!-- Footer Info Table -->
                 <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400 flex justify-between items-center">
                     <span id="total-count">Total: 0 surat tercatat</span>
                     <span class="text-emerald-600 font-semibold">PPK Kab. Badung &bull; Live Sync Active</span>
                 </div>
             </div>
-
         </div>
     </main>
 
-    <!-- Pop-up Modal Sukses Berhasil Generate -->
+    <!-- Modal Sukses Berhasil Generate -->
     <div id="success-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 text-center transform transition-all border border-slate-100">
             <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
@@ -244,6 +234,58 @@
             <button onclick="closeSuccessModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2.5 rounded-xl transition">
                 Tutup
             </button>
+        </div>
+    </div>
+
+    <!-- Modal Edit Surat (Perbaikan Kesalahan Penulisan) -->
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <h3 class="text-base font-bold text-slate-900 flex items-center">
+                    <i class="fa-solid fa-pen-to-square text-emerald-600 mr-2"></i> Edit Data Surat
+                </h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="edit-form" class="space-y-4">
+                <input type="hidden" id="edit-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Surat Saat Ini</label>
+                    <input type="text" id="edit-full-number" disabled
+                        class="w-full text-xs font-mono font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-100 text-slate-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1" for="edit-department">Bagian / Unit</label>
+                    <select id="edit-department" required
+                        class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50/50">
+                        <option value="YANKES">YANKES (Pelayanan Kesehatan)</option>
+                        <option value="UMUM">UMUM (Bagian Umum)</option>
+                        <option value="KEU">KEU (Keuangan & Anggaran)</option>
+                        <option value="SDM">SDM (Sumber Daya Manusia)</option>
+                        <option value="MEDIK">MEDIK (Pelayanan Medik)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1" for="edit-description">Perihal / Keterangan Surat</label>
+                    <textarea id="edit-description" rows="3" required
+                        class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50/50"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1" for="edit-requester">Nama Pemohon / Staff</label>
+                    <input type="text" id="edit-requester" required
+                        class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50/50">
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button type="button" onclick="closeEditModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2.5 rounded-xl transition">
+                        Batal
+                    </button>
+                    <button type="submit" id="btn-update" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs py-2.5 rounded-xl shadow transition">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -276,10 +318,6 @@
                     <span>Masuk (Login)</span>
                 </button>
             </form>
-
-            <div class="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-400">
-                <span>Aplikasi Internal PPK Kab. Badung</span>
-            </div>
         </div>
     </div>
 
@@ -301,9 +339,6 @@
 
     <!-- Script Aplikasi Supabase & Auth -->
     <script>
-        // ==========================================
-        // KONFIGURASI SUPABASE
-        // ==========================================
         const SUPABASE_URL = "https://btlzdcozurvveuchjrfc.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0bHpkY296dXJ2dmV1Y2hqcmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwOTMzMTksImV4cCI6MjEwODY2OTMxOX0.BYlTlw_GljsjyVPVl_-q3X_SWQeVtmTgCoKOW7nQOqk"; 
 
@@ -313,7 +348,6 @@
         let letters = [];
         let lastGeneratedNumber = '';
 
-        // DOM Elements
         const form = document.getElementById('letter-form');
         const letterDateInput = document.getElementById('letter-date');
         const departmentInput = document.getElementById('department');
@@ -328,11 +362,11 @@
         const mainAppContent = document.getElementById('main-app-content');
         const loginGate = document.getElementById('login-gate');
         const successModal = document.getElementById('success-modal');
+        const editModal = document.getElementById('edit-modal');
         const modalLetterNumber = document.getElementById('modal-letter-number');
         const statTotal = document.getElementById('stat-total');
         const statToday = document.getElementById('stat-today');
 
-        // Set default date to today
         const todayStr = new Date().toISOString().split('T')[0];
         letterDateInput.value = todayStr;
         currentDateDisplay.textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -349,11 +383,9 @@
         const gateAuthForm = document.getElementById('gate-auth-form');
         gateAuthForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-
             const username = document.getElementById('gate-username').value.trim().toLowerCase();
             const password = document.getElementById('gate-password').value.trim();
             const btnGate = document.getElementById('btn-gate-submit');
-
             const email = `${username}@ppk.badungkab.go.id`;
 
             btnGate.disabled = true;
@@ -404,10 +436,8 @@
             showToast("Keluar", "Anda telah keluar dari akun.");
         }
 
-        // Load Letters from Supabase
         async function loadLetters() {
             if (!currentUser) return;
-
             try {
                 const { data, error } = await supabaseClient
                     .from('letters')
@@ -416,7 +446,6 @@
                     .order('created_at', { ascending: true });
 
                 if (error) throw error;
-
                 letters = data || [];
                 updateDashboardStats();
                 renderTable(searchInput.value);
@@ -426,18 +455,15 @@
             }
         }
 
-        // Update Dashboard Stats Cards
         function updateDashboardStats() {
             statTotal.textContent = letters.length;
             const todayCount = letters.filter(item => item.letter_date === todayStr).length;
             statToday.textContent = todayCount;
         }
 
-        // Setup Realtime Synchronization
         let realtimeChannel = null;
         function setupRealtimeSync() {
             if (realtimeChannel) return;
-
             realtimeChannel = supabaseClient
                 .channel('public:letters')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'letters' }, payload => {
@@ -446,7 +472,6 @@
                 .subscribe();
         }
 
-        // Render Table
         function renderTable(filterText = '') {
             tableBody.innerHTML = '';
             
@@ -481,6 +506,10 @@
                                 class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 p-2 rounded-lg border border-emerald-200 transition mr-1">
                                 <i class="fa-regular fa-copy"></i>
                             </button>
+                            <button onclick="openEditModal('${item.id}')" title="Edit / Perbaiki Kesalahan"
+                                class="bg-amber-50 hover:bg-amber-100 text-amber-600 p-2 rounded-lg border border-amber-200 transition mr-1">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
                             <button onclick="deleteLetter('${item.id}')" title="Hapus"
                                 class="bg-rose-50 hover:bg-rose-100 text-rose-600 p-2 rounded-lg border border-rose-200 transition">
                                 <i class="fa-regular fa-trash-can"></i>
@@ -490,17 +519,14 @@
                     tableBody.appendChild(tr);
                 });
             }
-
             totalCountEl.textContent = `Total: ${letters.length} surat tercatat`;
         }
 
-        // Fungsi Download Excel
         function downloadExcel() {
             if (letters.length === 0) {
                 showToast("Kosong", "Tidak ada data surat untuk di-export ke Excel.");
                 return;
             }
-
             const excelData = letters.map((item, index) => ({
                 "No": index + 1,
                 "Nomor Surat": item.full_number,
@@ -509,11 +535,9 @@
                 "Perihal / Keterangan": item.description,
                 "Pemohon / Staff": item.requester
             }));
-
             const worksheet = XLSX.utils.json_to_sheet(excelData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Nomor Surat");
-
             const dateStr = new Date().toISOString().split('T')[0];
             XLSX.writeFile(workbook, `Rekap_Nomor_Surat_PPK_${dateStr}.xlsx`);
             showToast("Berhasil", "File Excel rekap surat berhasil diunduh.");
@@ -523,7 +547,7 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Form Submit Handler
+        // Form Submit Handler (Create New)
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             if (!currentUser) return;
@@ -539,7 +563,6 @@
 
             const sameDateLetters = letters.filter(item => item.letter_date === dateVal);
             const sequenceNum = sameDateLetters.length + 1;
-
             let formattedNumber = `${day}.${sequenceNum}/PPK/${deptVal}/${year}`;
 
             const btnSubmit = document.getElementById('btn-submit');
@@ -560,7 +583,6 @@
                     }]);
 
                 if (error) throw error;
-
                 lastGeneratedNumber = formattedNumber;
                 modalLetterNumber.textContent = formattedNumber;
                 successModal.classList.remove('hidden');
@@ -574,6 +596,75 @@
             } finally {
                 btnSubmit.disabled = false;
                 btnSubmit.innerHTML = `<i class="fa-solid fa-ticket"></i> <span>Generate & Ambil Nomor</span>`;
+            }
+        });
+
+        // Edit Modal Handlers
+        window.openEditModal = function(id) {
+            const item = letters.find(l => l.id === id);
+            if (!item) return;
+
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('edit-full-number').value = item.full_number;
+            document.getElementById('edit-department').value = item.department;
+            document.getElementById('edit-description').value = item.description;
+            document.getElementById('edit-requester').value = item.requester;
+
+            editModal.classList.remove('hidden');
+        };
+
+        window.closeEditModal = function() {
+            editModal.classList.add('hidden');
+        };
+
+        const editForm = document.getElementById('edit-form');
+        editForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const id = document.getElementById('edit-id').value;
+            const newDept = document.getElementById('edit-department').value;
+            const newDesc = document.getElementById('edit-description').value.trim();
+            const newReq = document.getElementById('edit-requester').value.trim();
+
+            const btnUpdate = document.getElementById('btn-update');
+            btnUpdate.disabled = true;
+            btnUpdate.textContent = "Menyimpan...";
+
+            try {
+                // Ambil data lama untuk cek apakah departemen berubah (sehingga perlu update format nomor jika diperlukan, atau tetap pertahankan nomor urut)
+                const targetItem = letters.find(l => l.id === id);
+                let newFullNumber = targetItem.full_number;
+
+                // Jika bagian/departemen berubah, kita bisa update bagian di dalam string nomor suratnya
+                if (targetItem.department !== newDept) {
+                    const parts = targetItem.full_number.split('/');
+                    if (parts.length >= 4) {
+                        parts[2] = newDept; // Ganti bagian
+                        newFullNumber = parts.join('/');
+                    }
+                }
+
+                const { error } = await supabaseClient
+                    .from('letters')
+                    .update({
+                        department: newDept,
+                        full_number: newFullNumber,
+                        description: newDesc,
+                        requester: newReq
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+                showToast("Berhasil", "Data surat berhasil diperbarui.");
+                closeEditModal();
+                loadLetters();
+            } catch (err) {
+                console.error(err);
+                showToast("Gagal Memperbarui", err.message);
+            } finally {
+                btnUpdate.disabled = false;
+                btnUpdate.textContent = "Simpan Perubahan";
             }
         });
 
@@ -611,7 +702,6 @@
             renderTable(e.target.value);
         });
 
-        // Init Session Check on Load
         checkAuthSession().then(() => {
             if (currentUser) loadLetters();
         });
