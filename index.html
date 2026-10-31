@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pengambilan Nomor Surat PPK</title>
+    
+    <!-- Favicon Logo di Tab Browser -->
+    <link rel="icon" type="image/png" href="logo-badung.png">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -146,7 +150,7 @@
                             <label class="block text-xs font-semibold text-slate-600 mb-1" for="requester">
                                 <i class="fa-solid fa-user mr-1 text-emerald-600"></i> Nama Pemohon / Staff
                             </label>
-                            <input type="text" id="requester" required placeholder="Contoh: Gus Satya"
+                            <input type="text" id="requester" required placeholder="Contoh: Budi Santoso, SKM"
                                 class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-slate-50/50">
                         </div>
 
@@ -632,15 +636,13 @@
             btnUpdate.textContent = "Menyimpan...";
 
             try {
-                // Ambil data lama untuk cek apakah departemen berubah (sehingga perlu update format nomor jika diperlukan, atau tetap pertahankan nomor urut)
                 const targetItem = letters.find(l => l.id === id);
                 let newFullNumber = targetItem.full_number;
 
-                // Jika bagian/departemen berubah, kita bisa update bagian di dalam string nomor suratnya
                 if (targetItem.department !== newDept) {
                     const parts = targetItem.full_number.split('/');
                     if (parts.length >= 4) {
-                        parts[2] = newDept; // Ganti bagian
+                        parts[2] = newDept;
                         newFullNumber = parts.join('/');
                     }
                 }
