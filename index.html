@@ -163,7 +163,10 @@
                 </div>
 
                 <div class="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-400">
-                    Format Otomatis: <br><code class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md font-mono font-bold mt-1 inline-block">[Tanggal].[No.Urut]/PPK/[Bagian]/[Tahun]</code>
+                    Format Otomatis: <br>
+                    <code class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md font-mono font-bold mt-1 inline-block">
+                        [Tanggal].[No.Urut]/[Bulan Romawi]/PPK/[Bagian]/[Tahun]
+                    </code>
                 </div>
             </div>
 
@@ -241,7 +244,7 @@
         </div>
     </div>
 
-    <!-- Modal Edit Surat (Perbaikan Kesalahan Penulisan) -->
+    <!-- Modal Edit Surat -->
     <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
@@ -374,6 +377,12 @@
         const todayStr = new Date().toISOString().split('T')[0];
         letterDateInput.value = todayStr;
         currentDateDisplay.textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Fungsi Konversi Angka Bulan (1-12) ke Romawi (I-XII)
+        function getRomanMonth(monthNumber) {
+            const romanMonths = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+            return romanMonths[monthNumber - 1] || "I";
+        }
 
         function showToast(title, message) {
             document.getElementById('toast-title').textContent = title;
@@ -551,7 +560,7 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Form Submit Handler (Create New)
+        // Form Submit Handler (Generate Nomor Baru Sesuai Format: 1.1/XI/PPK/YANKES/2026)
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             if (!currentUser) return;
@@ -561,13 +570,17 @@
             const descVal = descriptionInput.value.trim();
             const reqVal = requesterInput.value.trim();
 
-            const dateObj = new Date(dateVal);
-            const day = dateObj.getDate(); 
-            const year = dateObj.getFullYear();
+            const [yearStr, monthStr, dayStr] = dateVal.split('-');
+            const day = parseInt(dayStr, 10);
+            const monthNum = parseInt(monthStr, 10);
+            const romanMonth = getRomanMonth(monthNum);
+            const year = yearStr;
 
             const sameDateLetters = letters.filter(item => item.letter_date === dateVal);
             const sequenceNum = sameDateLetters.length + 1;
-            let formattedNumber = `${day}.${sequenceNum}/PPK/${deptVal}/${year}`;
+
+            // Format nomor surat: 1.1/XI/PPK/YANKES/2026
+            let formattedNumber = `${day}.${sequenceNum}/${romanMonth}/PPK/${deptVal}/${year}`;
 
             const btnSubmit = document.getElementById('btn-submit');
             btnSubmit.disabled = true;
@@ -641,7 +654,12 @@
 
                 if (targetItem.department !== newDept) {
                     const parts = targetItem.full_number.split('/');
-                    if (parts.length >= 4) {
+                    // Format baru: [0: Tanggal.Urut] / [1: BulanRomawi] / [2: PPK] / [3: Bagian] / [4: Tahun]
+                    if (parts.length >= 5) {
+                        parts[3] = newDept;
+                        newFullNumber = parts.join('/');
+                    } else if (parts.length === 4) {
+                        // Fallback jika record lama memakai format 4 bagian
                         parts[2] = newDept;
                         newFullNumber = parts.join('/');
                     }
